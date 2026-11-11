@@ -1,0 +1,36 @@
+<style>
+body{margin:0;padding:10px 12px;text-align:center}
+#g{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;max-width:240px;margin:8px auto}
+#g button{aspect-ratio:1;font-size:34px;font-weight:700;padding:0}
+.x{color:var(--tg-theme-link-color)}
+.o{color:var(--tg-theme-destructive-text-color)}
+#s{min-height:1.4em;font-weight:600}
+</style>
+<div id="s"></div><div id="g"></div><button id="n" style="display:none">Новая игра</button>
+<script>
+const T=window.TelegramWidget,$=i=>document.getElementById(i);
+let S={b:"---------",t:"x",w:"",p:[0,0],n:["",""],r:0},busy=0;
+const nm=k=>(S.n[k=="x"?0:1]||"Игрок")+(k=="x"?" ✕":" ○");
+function draw(e){
+const g=$("g");
+g.replaceChildren(...[...S.b].map((c,i)=>{
+const b=document.createElement("button");
+b.textContent=c=="x"?"✕":c=="o"?"○":"";
+b.className=c;
+b.onclick=()=>{if(c=="-"&&!S.w)go("m:"+i)};
+return b}));
+$("s").textContent=e||(S.w=="d"?"Ничья 🤝":S.w?"🏆 "+nm(S.w):"Ход: "+nm(S.t));
+$("n").style.display=S.w?"":"none";
+}
+function ld(s){
+try{const d=JSON.parse(s);if(d.r>=S.r)S=d;draw(d.e)}catch(x){draw()}
+}
+function go(d){
+if(busy||!T)return;
+busy=1;$("s").textContent="…";
+T.request("xo:"+d).then(a=>ld(a.result),e=>draw(e.code=="NOT_ALLOWED"?"Игра работает только в чате":"Ошибка: "+e.code)).finally(()=>{busy=0});
+}
+$("n").onclick=()=>go("n");
+if(T)T.onEvent("chatDataChanged",()=>ld(T.chatData));
+ld(T&&T.chatData);
+</script>

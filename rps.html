@@ -1,0 +1,47 @@
+<style>
+body{margin:0;padding:10px 12px;text-align:center}
+#h{display:flex;justify-content:space-around;font-weight:600}
+#l{font-size:28px;margin:8px 0;min-height:1.4em}
+#s{min-height:1.4em;margin-bottom:8px}
+#b{display:flex;gap:8px;justify-content:center;margin-bottom:6px}
+#b button{font-size:28px;padding:6px 14px}
+</style>
+<div id="h"></div><div id="l"></div><div id="s"></div><div id="b"></div><button id="n" style="display:none">Новый матч</button>
+<script>
+const T=window.TelegramWidget,$=i=>document.getElementById(i),E=["🪨","📄","✂️"];
+let S={s:[0,0],n:["",""],d:[0,0],l:[],w:-1,r:0},busy=0;
+const nm=i=>S.n[i]||"Игрок "+(i+1);
+function draw(e){
+$("h").replaceChildren(...[0,1].map(i=>{
+const d=document.createElement("div");
+d.textContent=nm(i)+" "+S.s[i]+(S.d[i]?" ✔":"");
+return d}));
+let l="",m="Играем до 3 побед";
+if(S.l.length){
+const a=S.l[0],b=S.l[1];
+l=E[a]+" vs "+E[b];
+m=a==b?"Ничья":nm((a-b+3)%3==1?0:1)+" берёт раунд";
+}
+if(S.w>=0)m="🏆 "+nm(S.w);
+$("l").textContent=l;
+$("s").textContent=e||m;
+$("n").style.display=S.w>=0?"":"none";
+}
+function ld(s){
+try{const d=JSON.parse(s);if(d.r>=S.r)S=d;draw(d.e)}catch(x){draw()}
+}
+function go(d){
+if(busy||!T)return;
+busy=1;$("s").textContent="…";
+T.request("rps:"+d).then(a=>ld(a.result),e=>draw(e.code=="NOT_ALLOWED"?"Игра работает только в чате":"Ошибка: "+e.code)).finally(()=>{busy=0});
+}
+E.forEach((x,i)=>{
+const b=document.createElement("button");
+b.textContent=x;
+b.onclick=()=>{if(S.w<0)go("m:"+i)};
+$("b").appendChild(b);
+});
+$("n").onclick=()=>go("n");
+if(T)T.onEvent("chatDataChanged",()=>ld(T.chatData));
+ld(T&&T.chatData);
+</script>

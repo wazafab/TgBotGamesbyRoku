@@ -1,0 +1,22 @@
+services:
+  - type: worker
+    name: tg-games-bot
+    runtime: python
+    plan: starter
+    buildCommand: pip install -r requirements.txt
+    startCommand: python bot.py
+    envVars:
+      - key: BOT_TOKEN
+        sync: false
+      - key: TG_TEST
+        value: "0"
+      - key: STATE_FILE
+        value: /data/state.json
+      - key: PYTHON_VERSION
+        value: 3.12.3
+      - key: PYTHONUNBUFFERED
+        value: "1"
+    disk:
+      name: state
+      mountPath: /data
+      sizeGB: 1
