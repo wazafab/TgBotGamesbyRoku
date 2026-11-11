@@ -1,0 +1,59 @@
+<style>
+body{margin:0;padding:8px 12px;text-align:center}
+#g{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;max-width:264px;margin:6px auto}
+#g div{aspect-ratio:1;border-radius:6px;display:flex;align-items:center;justify-content:center;font-weight:700;color:#fff;background:var(--tg-theme-secondary-bg-color)}
+#p{display:flex;gap:6px;justify-content:center}
+#p button{width:52px;height:44px;font-size:20px;padding:0}
+#s{font-weight:600;min-height:1.4em}
+</style>
+<div id="s"></div><div id="g"></div><div id="p"><button>←</button><button>↑</button><button>↓</button><button>→</button><button>↺</button></div>
+<script>
+const $=i=>document.getElementById(i);
+let b,sc=0,best=0,over=0;
+const ls=(k,v)=>{try{return v===undefined?localStorage.getItem(k):localStorage.setItem(k,v)}catch(e){}};
+function add(a){
+const e=[];
+a.forEach((v,i)=>{if(!v)e.push(i)});
+if(e.length)a[e[Math.random()*e.length|0]]=Math.random()<.9?2:4;
+}
+const idx=(d,i)=>[0,1,2,3].map(j=>d==0?i*4+j:d==3?i*4+3-j:d==1?j*4+i:(3-j)*4+i);
+function sim(d){
+const nb=b.slice();
+let ch=0,g=0;
+for(let i=0;i<4;i++){
+const ix=idx(d,i),v=ix.map(k=>b[k]).filter(Boolean),o=[];
+for(let j=0;j<v.length;j++){
+if(v[j]==v[j+1]){o.push(v[j]*2);g+=v[j]*2;j++}else o.push(v[j]);
+}
+while(o.length<4)o.push(0);
+ix.forEach((k,j)=>{if(nb[k]!=o[j])ch=1;nb[k]=o[j]});
+}
+return{nb,ch,g};
+}
+function save(){ls("s",JSON.stringify([b,sc,best,over]))}
+function mv(d){
+if(over)return;
+const r=sim(d);
+if(!r.ch)return;
+b=r.nb;sc+=r.g;
+if(sc>best)best=sc;
+add(b);
+over=[0,1,2,3].some(q=>sim(q).ch)?0:1;
+save();draw();
+}
+function fresh(){b=Array(16).fill(0);add(b);add(b);sc=0;over=0;save();draw()}
+function draw(){
+$("g").replaceChildren(...b.map(v=>{
+const d=document.createElement("div");
+if(v){
+d.textContent=v;
+d.style.background="hsl("+(Math.log2(v)*32+20)%360+",60%,50%)";
+d.style.fontSize=v<100?"24px":v<1000?"20px":"15px";
+}
+return d}));
+$("s").textContent="Счёт "+sc+"   🏆 "+best+(over?"  Конец игры":"");
+}
+[...$("p").children].forEach((x,i)=>x.onclick=()=>i<4?mv(i):fresh());
+try{[b,sc,best,over]=JSON.parse(ls("s"))}catch(e){}
+if(!Array.isArray(b)||b.length!=16)fresh();else draw();
+</script>
