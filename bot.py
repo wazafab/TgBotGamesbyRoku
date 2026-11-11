@@ -23,7 +23,7 @@ from pathlib import Path
 import requests
 
 HERE = Path(__file__).parent
-TOKEN = os.environ.get("BOT_TOKEN", "9245792127:AAFEVBCz9JX8CeX64RteHKkLTC4mdKoJ6VA")
+TOKEN = os.environ.get("BOT_TOKEN", "")
 TEST = os.environ.get("TG_TEST", "") == "1"
 API = f"https://api.telegram.org/bot{TOKEN}/" + ("test/" if TEST else "")
 STATE_FILE = Path(os.environ.get("STATE_FILE", HERE / "state.json"))
