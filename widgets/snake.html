@@ -1,0 +1,46 @@
+<style>
+body{margin:0;padding:8px 12px;text-align:center}
+canvas{display:block;margin:6px auto;border-radius:8px;background:var(--tg-theme-secondary-bg-color)}
+#p{display:flex;gap:6px;justify-content:center}
+#p button{width:56px;height:44px;font-size:20px;padding:0}
+#s{font-weight:600;min-height:1.4em}
+</style>
+<div id="s"></div><canvas id="c" width="280" height="280"></canvas><div id="p"><button>◀</button><button>▲</button><button>▼</button><button>▶</button></div>
+<script>
+const W=window.TelegramWidget,N=14,Z=20,D=[[-1,0],[0,-1],[0,1],[1,0]],$=i=>document.getElementById(i),x=$("c").getContext("2d");
+let sn,dir,nd,f,sc,st=0,tm,best=0;
+const ls=(k,v)=>{try{return v===undefined?localStorage.getItem(k):localStorage.setItem(k,v)}catch(e){}};
+best=+ls("b")||0;
+const rnd=()=>Math.random()*N|0;
+function food(){do{f=[rnd(),rnd()]}while(sn.some(s=>s[0]==f[0]&&s[1]==f[1]))}
+function reset(){sn=[[7,7],[6,7],[5,7]];dir=nd=D[3];sc=0;food();st=0;draw("Нажми стрелку, чтобы начать")}
+function stop(){clearInterval(tm)}
+function run(){stop();tm=setInterval(tick,140);st=1;draw()}
+function tick(){
+dir=nd;
+const h=[sn[0][0]+dir[0],sn[0][1]+dir[1]];
+if(h[0]<0||h[1]<0||h[0]>=N||h[1]>=N||sn.some(s=>s[0]==h[0]&&s[1]==h[1])){stop();st=3;draw("Игра окончена. Нажми стрелку");return}
+sn.unshift(h);
+if(h[0]==f[0]&&h[1]==f[1]){sc++;if(sc>best){best=sc;ls("b",best)}food()}else sn.pop();
+draw();
+}
+function draw(m){
+const t=W&&W.themeParams||{};
+x.clearRect(0,0,280,280);
+x.fillStyle=t.destructive_text_color||"#e53935";
+x.fillRect(f[0]*Z+2,f[1]*Z+2,Z-4,Z-4);
+sn.forEach((s,i)=>{x.fillStyle=i?t.button_color||"#3390ec":t.accent_text_color||"#1b6fd1";x.fillRect(s[0]*Z+1,s[1]*Z+1,Z-2,Z-2)});
+$("s").textContent=m||"🍎 "+sc+"   🏆 "+best;
+}
+[...$("p").children].forEach((b,i)=>b.onclick=()=>{
+if(st==3)reset();
+const d=D[i];
+if(d[0]+dir[0]||d[1]+dir[1])nd=d;
+if(st!=1)run();
+});
+if(W){
+W.onEvent("deactivated",()=>{if(st==1){stop();st=2;draw("Пауза. Нажми стрелку")}});
+W.onEvent("themeChanged",()=>draw());
+}
+reset();
+</script>
